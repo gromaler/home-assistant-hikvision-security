@@ -1,5 +1,7 @@
 # Hikvision Cameras + Home Assistant Security
 
+![Hikvision Camera Home Assistant Integration](Hikvision%20Camera%20Home%20Assistant%20Integration.png)
+
 Turn inexpensive Chinese-market Hikvision IP cameras into a more capable Home Assistant security system.
 
 This project documents a real Home Assistant setup built around Hikvision cameras purchased from the Chinese market. What started as a simple camera integration gradually became a distributed home-security setup with live video, audio, high-resolution snapshots, door and gate sensors, Telegram notifications, and camera-built-in alarms triggered directly from Home Assistant.
