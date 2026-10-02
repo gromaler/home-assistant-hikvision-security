@@ -1,0 +1,95 @@
+# Door and gate notifications while Security Mode is active
+#
+# This example is based on the working automation used in this project.
+# Replace the generic binary_sensor entity IDs with your own door/gate sensors.
+#
+# It assumes the Security Mode helper from examples/security-mode.yaml:
+#
+#   input_boolean.security_mode
+#
+# The public example uses persistent notifications so it does not contain
+# Telegram bot details, chat IDs, or other private notification targets.
+
+automation:
+  - alias: "Security - Doors and Gates"
+    description: "Notify when a monitored door or gate opens or closes while Security Mode is active"
+
+    triggers:
+      - trigger: state
+        entity_id:
+          - binary_sensor.main_gate
+          - binary_sensor.front_door
+          - binary_sensor.boiler_room_door
+          - binary_sensor.kitchen_door
+          - binary_sensor.bathhouse_door
+        from: "off"
+        to: "on"
+        id: opened
+
+      - trigger: state
+        entity_id:
+          - binary_sensor.main_gate
+          - binary_sensor.front_door
+          - binary_sensor.boiler_room_door
+          - binary_sensor.kitchen_door
+          - binary_sensor.bathhouse_door
+        from: "on"
+        to: "off"
+        id: closed
+
+    conditions:
+      - condition: state
+        entity_id: input_boolean.security_mode
+        state: "on"
+
+    actions:
+      - variables:
+          point_name: >-
+            {{ trigger.to_state.attributes.friendly_name
+               | default(trigger.entity_id) }}
+
+      - choose:
+          - conditions:
+              - condition: trigger
+                id: opened
+            sequence:
+              - action: persistent_notification.create
+                data:
+                  title: "Security alert"
+                  message: "{{ point_name }} opened"
+
+          - conditions:
+              - condition: trigger
+                id: closed
+            sequence:
+              - action: persistent_notification.create
+                data:
+                  title: "Security update"
+                  message: "{{ point_name }} closed"
+
+    mode: queued
+    max: 10
+
+# ---------------------------------------------------------------------------
+# Telegram
+# ---------------------------------------------------------------------------
+#
+# In the real installation these events can be sent to Telegram instead of
+# Home Assistant persistent notifications.
+#
+# Keep the trigger/condition logic above and replace the notification action
+# with the notify entity/action configured by your Telegram Bot integration.
+#
+# Do not publish your bot token, chat ID, or other credentials.
+#
+# ---------------------------------------------------------------------------
+# Why notify on both OPEN and CLOSED?
+# ---------------------------------------------------------------------------
+#
+# An OPEN event tells us that an entry point changed while the house was armed.
+# The following CLOSED event is also useful: it shows that the door or gate
+# was closed again and provides a simple event trail without opening the
+# Home Assistant dashboard.
+#
+# This automation only reports state changes. Alarm/siren actions are kept
+# separate so notification logic and alarm logic can be tested independently.
