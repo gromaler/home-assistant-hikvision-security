@@ -1,0 +1,110 @@
+# Home Assistant Security Mode
+#
+# This example shows the basic arming logic used in this project.
+# It intentionally uses generic entity IDs so the configuration can be
+# published safely and adapted to another installation.
+#
+# Create the helper from:
+# Settings -> Devices & services -> Helpers -> Create helper -> Toggle
+#
+# Suggested entity ID:
+# input_boolean.security_mode
+
+input_boolean:
+  security_mode:
+    name: Security Mode
+    icon: mdi:shield-home
+
+# ---------------------------------------------------------------------------
+# Armed status check
+# ---------------------------------------------------------------------------
+#
+# When Security Mode is switched ON, Home Assistant checks the protected
+# doors/gates and reports any entry point that is already open.
+#
+# Replace the example binary_sensor entities with your own sensors.
+
+automation:
+  - alias: "Security - Armed Status Check"
+    description: "Check protected entry points whenever Security Mode changes"
+    triggers:
+      - trigger: state
+        entity_id: input_boolean.security_mode
+        to: "on"
+        id: armed
+
+      - trigger: state
+        entity_id: input_boolean.security_mode
+        to: "off"
+        id: disarmed
+
+    actions:
+      - choose:
+          - conditions:
+              - condition: trigger
+                id: armed
+            sequence:
+              - variables:
+                  open_points: >-
+                    {{
+                      [
+                        ('Main gate', states('binary_sensor.main_gate') == 'on'),
+                        ('Front door', states('binary_sensor.front_door') == 'on'),
+                        ('Boiler room', states('binary_sensor.boiler_room_door') == 'on'),
+                        ('Kitchen door', states('binary_sensor.kitchen_door') == 'on'),
+                        ('Bathhouse', states('binary_sensor.bathhouse_door') == 'on')
+                      ]
+                      | selectattr('1', 'eq', true)
+                      | map(attribute='0')
+                      | list
+                    }}
+
+              # Replace this action with your preferred notification target.
+              # The message template can be reused with Telegram, the HA
+              # Companion App, or another notification integration.
+              - action: persistent_notification.create
+                data:
+                  title: "Security Mode ON"
+                  message: >-
+                    {% if open_points | count > 0 %}
+                    Security Mode is ON.
+                    Open entry points: {{ open_points | join(', ') }}
+                    {% else %}
+                    Security Mode is ON. All monitored entry points are closed.
+                    {% endif %}
+
+          - conditions:
+              - condition: trigger
+                id: disarmed
+            sequence:
+              - action: persistent_notification.create
+                data:
+                  title: "Security Mode OFF"
+                  message: "Security Mode is OFF."
+
+    mode: restart
+
+# ---------------------------------------------------------------------------
+# Notes
+# ---------------------------------------------------------------------------
+#
+# In the real installation, Security Mode is also used as a condition for:
+#
+# - door and gate open/close notifications
+# - Hikvision camera alarm/siren actions
+# - security snapshots
+#
+# Keeping one global helper makes the logic easy to understand:
+#
+#   Sensor event
+#       |
+#       v
+#   Security Mode ON?
+#       |
+#       +-- No  -> ignore security action
+#       |
+#       +-- Yes -> notify / snapshot / camera alarm
+#
+# The notification action above deliberately uses Home Assistant's
+# persistent_notification service so this public example does not depend
+# on a specific Telegram bot, chat ID, phone, or other private target.
