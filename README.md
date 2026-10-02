@@ -75,24 +75,23 @@ In this installation, several cameras are triggered together. This effectively c
 
 The exact ISAPI calls and Home Assistant configuration will be documented in the `docs/` and `examples/` sections of this repository.
 
-## Planned documentation
+## Documentation
 
-The repository will include:
+The project documentation is being built from the actual working installation:
 
-```text
-examples/
-  snapshots.yaml
-  security-mode.yaml
-  door-notifications.yaml
-  camera-sirens.yaml
+- [Full-resolution snapshots](docs/snapshots.md) — why the normal snapshot path was not enough, how the RTSP main stream was verified, and how FFmpeg is used to capture the real stream resolution.
+- [RTSP video and audio](docs/rtsp-and-audio.md) — main/sub streams, FFmpeg diagnostics, audio troubleshooting, and the AAC 64 kbps configuration that worked in this installation.
+- **Hikvision ISAPI alarm control** — coming next. The final documentation will use the exact commands from the working installation rather than an unverified generic example.
 
-docs/
-  rtsp-and-audio.md
-  snapshots.md
-  hikvision-isapi.md
-```
+## Ready-to-adapt examples
 
-We will also document the practical issues encountered along the way, including snapshot resolution, RTSP streams, audio configuration, event handling, and alarm triggering.
+- [FFmpeg snapshots](examples/snapshots.yaml) — multiple cameras, timestamped JPEG files, and automatic cleanup.
+- [Security Mode](examples/security-mode.yaml) — global armed/disarmed helper and entry-point status check.
+- [Door and gate notifications](examples/door-notifications.yaml) — OPEN/CLOSED events while Security Mode is active.
+- [Actual camera snapshot](examples/cam88_5_20260615_124203.jpg) — a real JPEG produced by the snapshot method documented above.
+- **Multi-camera sirens** — coming next after the exact tested ISAPI configuration is copied from the live Home Assistant installation.
+
+The examples deliberately use generic entity IDs, example IP addresses, and placeholder credentials. The goal is to publish working logic without exposing details from the real home network.
 
 ## Hardware
 
