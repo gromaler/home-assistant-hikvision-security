@@ -1,0 +1,70 @@
+# Hikvision full-resolution snapshots with FFmpeg
+#
+# Add/adapt these entries in configuration.yaml.
+#
+# Why FFmpeg?
+# In our setup, snapshots obtained through the normal camera integration were
+# much lower resolution than the Hikvision main stream. Capturing one frame
+# directly from RTSP preserves the resolution of the configured main stream.
+#
+# IMPORTANT:
+# - Replace USERNAME, PASSWORD and the example IP addresses.
+# - Do not commit real credentials to a public repository.
+# - Create the destination directories before running the commands.
+# - Channel 101 is commonly the main stream on Hikvision cameras.
+
+homeassistant:
+  allowlist_external_dirs:
+    - "/media"
+
+shell_command:
+  hikvision_camera_1_snapshot: >
+    ffmpeg -y -rtsp_transport tcp
+    -i "rtsp://USERNAME:PASSWORD@192.168.1.101:554/Streaming/Channels/101"
+    -frames:v 1
+    "/media/cameras/camera_1/camera_1_{{ now().strftime('%Y%m%d_%H%M%S') }}.jpg"
+
+  hikvision_camera_2_snapshot: >
+    ffmpeg -y -rtsp_transport tcp
+    -i "rtsp://USERNAME:PASSWORD@192.168.1.102:554/Streaming/Channels/101"
+    -frames:v 1
+    "/media/cameras/camera_2/camera_2_{{ now().strftime('%Y%m%d_%H%M%S') }}.jpg"
+
+  hikvision_camera_3_snapshot: >
+    ffmpeg -y -rtsp_transport tcp
+    -i "rtsp://USERNAME:PASSWORD@192.168.1.103:554/Streaming/Channels/101"
+    -frames:v 1
+    "/media/cameras/camera_3/camera_3_{{ now().strftime('%Y%m%d_%H%M%S') }}.jpg"
+
+  # Delete JPEG snapshots older than 7 days while keeping the directories.
+  cleanup_hikvision_snapshots: >
+    find /media/cameras
+    -type f \( -iname "*.jpg" -o -iname "*.jpeg" \)
+    -mtime +7 -delete
+
+# ---------------------------------------------------------------------------
+# Testing
+# ---------------------------------------------------------------------------
+#
+# After restarting Home Assistant, the commands are available as actions:
+#
+#   shell_command.hikvision_camera_1_snapshot
+#   shell_command.hikvision_camera_2_snapshot
+#   shell_command.hikvision_camera_3_snapshot
+#   shell_command.cleanup_hikvision_snapshots
+#
+# In the Home Assistant UI:
+#
+#   Developer Tools -> Actions
+#
+# Run one snapshot action and verify that a JPEG appears in the corresponding
+# /media/cameras/... directory.
+#
+# To preview which old JPEG files would be deleted without deleting anything,
+# run this from a Home Assistant terminal:
+#
+#   find /media/cameras -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) -mtime +7
+#
+# To delete ALL JPEG snapshots recursively while keeping the directories:
+#
+#   find /media/cameras -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) -delete
