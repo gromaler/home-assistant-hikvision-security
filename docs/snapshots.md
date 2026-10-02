@@ -178,6 +178,14 @@ For a security event, however, the extra detail can matter. A higher-resolution 
 
 The important point is that FFmpeg is not magically increasing image resolution. It simply captures a frame from the higher-resolution RTSP stream that the camera is already producing.
 
+## Actual result
+
+Below is an actual JPEG captured from one of the Hikvision cameras in this installation using the FFmpeg method described above.
+
+This is the real output from the RTSP main stream — not an upscaled low-resolution snapshot.
+
+![Actual full-resolution Hikvision snapshot](../examples/cam88_5_20260615_124203.jpg)
+
 ## Working example
 
 The ready-to-adapt configuration is available here:
